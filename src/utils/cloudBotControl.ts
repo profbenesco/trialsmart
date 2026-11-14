@@ -1,9 +1,9 @@
-import { api_base } from '@/external/bot-skeleton';
+import { api_base, DBot } from '@/external/bot-skeleton';
+import { javascriptGenerator } from 'blockly/javascript';
 
 const BACKEND_URL = 'https://railway.app';
 
 function getActiveDerivSession(): { loginid: string | null; token: string | null } {
-  // 1. Check Deriv's active WebSocket API instance directly (most reliable)
   const activeLoginId =
     (api_base as any)?.account_info?.loginid ||
     localStorage.getItem('active_loginid') ||
@@ -14,13 +14,12 @@ function getActiveDerivSession(): { loginid: string | null; token: string | null
     return { loginid: activeLoginId, token: directToken };
   }
 
-  // 2. Check client.accounts in localStorage and sessionStorage
   for (const storage of [localStorage, sessionStorage]) {
     try {
       const accountsRaw = storage.getItem('client.accounts');
       if (accountsRaw) {
         const accounts = JSON.parse(accountsRaw);
-        const id = activeLoginId || Object.keys(accounts)[0];
+        const id = activeLoginId || Object.keys(accounts);
         if (id && accounts[id]?.token) {
           return { loginid: id, token: accounts[id].token };
         }
@@ -30,7 +29,6 @@ function getActiveDerivSession(): { loginid: string | null; token: string | null
     }
   }
 
-  // 3. Fallback: scan storage keys for Deriv OAuth tokens (e.g., auth_info / access_token)
   for (const storage of [localStorage, sessionStorage]) {
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
@@ -55,6 +53,35 @@ function getActiveDerivSession(): { loginid: string | null; token: string | null
   return { loginid: activeLoginId, token: null };
 }
 
+function compileActiveWorkspaceCode(): string {
+  const Blockly = (window as any).Blockly;
+  const workspace = Blockly?.derivWorkspace || Blockly?.getMainWorkspace?.();
+
+  if (!workspace) {
+    throw new Error('Please tap the "Bot Builder" tab first so your strategy workspace loads.');
+  }
+
+  // 1. Try Deriv's native DBot code generator first
+  if (typeof (DBot as any)?.generateCode === 'function') {
+    const code = (DBot as any).generateCode();
+    if (code && code.trim()) return code;
+  }
+
+  // 2. Try Blockly v10+ javascriptGenerator
+  if (typeof javascriptGenerator?.workspaceToCode === 'function') {
+    const code = javascriptGenerator.workspaceToCode(workspace);
+    if (code && code.trim()) return code;
+  }
+
+  // 3. Fallback to legacy Blockly.JavaScript if attached on window
+  if (typeof Blockly?.JavaScript?.workspaceToCode === 'function') {
+    const code = Blockly.JavaScript.workspaceToCode(workspace);
+    if (code && code.trim()) return code;
+  }
+
+  throw new Error('Could not compile blocks. Make sure you have a strategy loaded in Bot Builder.');
+}
+
 export async function startCloudBot() {
   try {
     const { loginid, token } = getActiveDerivSession();
@@ -64,21 +91,7 @@ export async function startCloudBot() {
       return;
     }
 
-    // Compile the exact Blockly workspace blocks into JavaScript
-    const Blockly = (window as any).Blockly;
-    const workspace = Blockly?.derivWorkspace || Blockly?.getMainWorkspace?.();
-
-    if (!workspace) {
-      alert('Please open the Bot Builder tab first so your strategy loads.');
-      return;
-    }
-
-    const compiledCode = Blockly.JavaScript.workspaceToCode(workspace);
-
-    if (!compiledCode || compiledCode.trim() === '') {
-      alert('Your workspace is empty. Load or build a strategy first.');
-      return;
-    }
+    const compiledCode = compileActiveWorkspaceCode();
 
     const response = await fetch(`${BACKEND_URL}/api/bot/start`, {
       method: 'POST',
@@ -93,7 +106,7 @@ export async function startCloudBot() {
       alert(`Error: ${data.error || 'Failed to start cloud bot'}`);
     }
   } catch (err: any) {
-    alert(`Connection error: ${err.message}`);
+    alert(`Error: ${err.message}`);
   }
 }
 
