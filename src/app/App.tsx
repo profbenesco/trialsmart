@@ -114,55 +114,58 @@ function App() {
         handleCallback();
     }, []);
 
-    return <RouterProvider router={router} 
- <div
-  style={{
-    position: 'fixed',
-    bottom: '52px',
-    right: '16px',
-    zIndex: 9999,
-    display: 'flex',
-    gap: '8px',
-    background: 'rgba(14, 14, 14, 0.85)',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-  }}
->
-  <button
-    type="button"
-    onClick={startCloudBot}
-    style={{
-      background: '#00a79e',
-      color: '#ffffff',
-      padding: '8px 14px',
-      borderRadius: '4px',
-      border: 'none',
-      fontWeight: 'bold',
-      fontSize: '12px',
-      cursor: 'pointer',
-    }}
-  >
-    ▶ Run 24/7 Cloud
-  </button>
-  <button
-    type="button"
-    onClick={stopCloudBot}
-    style={{
-      background: '#ec3f3f',
-      color: '#ffffff',
-      padding: '8px 14px',
-      borderRadius: '4px',
-      border: 'none',
-      fontWeight: 'bold',
-      fontSize: '12px',
-      cursor: 'pointer',
-    }}
-  >
-    ■ Stop Cloud
-  </button>
-</div>
-  />;
+    return (
+        <>
+            <RouterProvider router={router} />
+            <div
+                style={{
+                    position: 'fixed',
+                    bottom: '52px',
+                    right: '16px',
+                    zIndex: 9999,
+                    display: 'flex',
+                    gap: '8px',
+                    background: 'rgba(14, 14, 14, 0.85)',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                }}
+            >
+                <button
+                    type='button'
+                    onClick={startCloudBot}
+                    style={{
+                        background: '#00a79e',
+                        color: '#ffffff',
+                        padding: '8px 14px',
+                        borderRadius: '4px',
+                        border: 'none',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                    }}
+                >
+                    ▶ Run 24/7 Cloud
+                </button>
+                <button
+                    type='button'
+                    onClick={stopCloudBot}
+                    style={{
+                        background: '#ec3f3f',
+                        color: '#ffffff',
+                        padding: '8px 14px',
+                        borderRadius: '4px',
+                        border: 'none',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                    }}
+                >
+                    ■ Stop Cloud
+                </button>
+            </div>
+        </>
+    );
 }
 
 export default App;
